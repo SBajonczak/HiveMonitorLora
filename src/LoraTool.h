@@ -11,6 +11,9 @@ public:
     void Send(String message);
     void Cycle();
     void Sleep();
+    bool Receive();
+    char* lastMessage;
+
 private:
     int _cs; int _rst; int _irq;
 };

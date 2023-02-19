@@ -82,7 +82,7 @@ void loop()
     Serial.print("Message: ");
     Serial.println(message);
     lora.Send(message);
-
+#if TIMER_ENABLED
     lora.Sleep();
     while (1)
     {
@@ -92,5 +92,8 @@ void loop()
         delay(1);
         delay(5000);
     }
+#else
+    delay(MS_DELAY_FOR_SENDING_DATA);
+#endif
 #endif
 }

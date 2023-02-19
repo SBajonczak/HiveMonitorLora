@@ -3,7 +3,7 @@
 #include <LoraTool.h>
 #include <RH_RF95.h>
 
-const long frequency = 868.0; // LoRa Frequency (Europe)
+const long frequency = RFM_FREQUENCY;
 RH_RF95 rf95(GPIO_LORA_SC, GPIO_LORA_IRQ);
 
 /*
@@ -17,11 +17,13 @@ const int irqPin =          GPIO_LORA_IRQ;
 */
 LoraTool::LoraTool(int CS, int RST, int IRQ)
 {
+    this->lastMessage = nullptr;
     this->_cs = CS;
     this->_rst = RST;
     this->_irq = IRQ;
 }
 LoraTool::~LoraTool() {}
+
 void LoraTool::Setup()
 {
     pinMode(this->_rst, OUTPUT);
@@ -31,7 +33,6 @@ void LoraTool::Setup()
     delay(10);
     digitalWrite(this->_rst, HIGH);
     delay(10);
-
     while (!rf95.init())
     {
         Serial.println("LoRa radio init failed");
@@ -61,8 +62,9 @@ void LoraTool::Setup()
 
 void LoraTool::Send(String message)
 {
+    this->Setup();
     int16_t packetnum = 0; // packet counter, we increment per xmission
-   // this->Setup();
+                           // this->Setup();
     char radiopacket[message.length() + 1];
     message.toCharArray(radiopacket, message.length());
 
@@ -79,8 +81,24 @@ void LoraTool::Sleep()
     rf95.sleep();
 };
 
+bool LoraTool::Receive()
+{
+    // Should be a message for us now
+    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    if (rf95.recv(buf, &len))
+    {
+        String s = String((char *)buf);
+        int i = String(this->lastMessage).compareTo((char *)buf);
+        if (i != 0)
+        {
+            this->lastMessage = (char *)buf;
+            return true;
+        }
+    }
+    return false;
+}
 void LoraTool::Cycle()
 {
-
     yield;
 };
